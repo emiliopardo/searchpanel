@@ -1,3 +1,25 @@
 <div id="div-contenedor" class="m-control m-container m-searchpanel">
-  <button id="ctrlTest" class="g-cartografia-bandera" title="AddFeature"></button>
+  <div class="m-searchpanel-plugin">
+    <!-- TITLE -->
+    <div class="m-searchpanel-title">{{title}}</div>
+    <!-- BODY-->
+    <div class="m-searchpanel-body">
+      <div id="m-searchpanel-content">
+        {{#each fields}}
+        <div id="field_{{field}}" class="m-searchpanel-opciones-busqueda">
+          <label class="m-searchpanel-label-opciones-busqueda" for="textbox{{alias}}">{{alias}}</label>
+          <input id="textbox{{alias}}" name="textbox{{alias}}" type="text" maxlength="150"
+            placeholder="{{alias}} ...">
+          <span class="m-searchpanel-info-opciones">* {{label}}</span>
+        </div>
+        {{/each}}
+      </div>
+      <div class="m-searchpanel-buttons">
+        <button id="m-searchpanel-loadButton" class="load" title="Ejecutar">
+          <i class="g-cartografia-posicion3"></i> Ejecutar</button>
+        <button id="m-searchpanel-clearButton" class="clear" title="Resetar">
+          <i class="g-cartografia-check4"></i> Limpiar</button>
+      </div>
+    </div>
+  </div>
 </div>

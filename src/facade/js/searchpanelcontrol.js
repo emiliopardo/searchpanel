@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /**
  * @module M/control/SearchpanelControl
  */
@@ -15,7 +16,7 @@ export default class SearchpanelControl extends M.Control {
    * @extends {M.Control}
    * @api stable
    */
-  constructor() {
+  constructor(config) {
     // 1. checks if the implementation can create PluginControl
     if (M.utils.isUndefined(SearchpanelImplControl)) {
       M.exception('La implementación usada no puede crear controles SearchpanelControl');
@@ -23,11 +24,26 @@ export default class SearchpanelControl extends M.Control {
     // 2. implementation of this control
     const impl = new SearchpanelImplControl();
     super(impl, 'Searchpanel');
+    this.config_ = config;
+    this.title_ = this.config_.title;
+    this.fields_ = this.config_.fields;
+    this.geosearchUrl_ = this.config_.geosearchUrl;
+    this.otherParameters_ = '&rows=20&start=0&srs=EPSG:25830';
+    this.maxRecordsPage_ = 8;
+    this.totalRecords_ = null;
+    this.page_number_ = 1;
+    this.page_total_ = null;
+    this.dataList_ = new Array();
+    this.capaGeoJSON_ = null;
+    this.wktFormatter__ = new ol.format.WKT();
+    this.arrayFeaturesMapeaGeoJSON_ = new Array();
+    this.selectedFeatures_ = new Array();
 
-    // captura de customevent lanzado desde impl con coords
-    window.addEventListener('mapclicked', (e) => {
-      this.map_.addLabel('Hola Mundo!', e.detail);
-    });
+
+    // eslint-disable-next-line no-console
+    //console.log(this.fields_);
+    // eslint-disable-next-line no-console
+    //console.log(this.geosearchUrl_);
   }
 
   /**
@@ -39,29 +55,12 @@ export default class SearchpanelControl extends M.Control {
    * @api stable
    */
   createView(map) {
-    if (!M.template.compileSync) { // JGL: retrocompatibilidad Mapea4
-      M.template.compileSync = (string, options) => {
-        let templateCompiled;
-        let templateVars = {};
-        let parseToHtml;
-        if (!M.utils.isUndefined(options)) {
-          templateVars = M.utils.extends(templateVars, options.vars);
-          parseToHtml = options.parseToHtml;
-        }
-        const templateFn = Handlebars.compile(string);
-        const htmlText = templateFn(templateVars);
-        if (parseToHtml !== false) {
-          templateCompiled = M.utils.stringToHtml(htmlText);
-        } else {
-          templateCompiled = htmlText;
-        }
-        return templateCompiled;
-      };
-    }
-    
+    let templateVars = { vars: { title: this.title_, fields: this.fields_ } };
+
     return new Promise((success, fail) => {
-      const html = M.template.compileSync(template);
-      // Añadir código dependiente del DOM
+      const html = M.template.compileSync(template, templateVars);
+      this.element = html;
+      this.addEvents(html, this.fields_);
       success(html);
     });
   }
@@ -76,13 +75,7 @@ export default class SearchpanelControl extends M.Control {
   activate() {
     // calls super to manage de/activation
     super.activate();
-    const div = document.createElement('div');
-    div.id = 'msgInfo';
-    div.classList.add('info');
-    div.innerHTML = 'Haz doble click sobre el mapa';
-    this.map_.getContainer().appendChild(div);
-
-    this.getImpl().activateClick(this.map_);
+    this.getImpl().activate(this.map_);
   }
   /**
    * This function is called on the control deactivation
@@ -94,10 +87,7 @@ export default class SearchpanelControl extends M.Control {
   deactivate() {
     // calls super to manage de/activation
     super.deactivate();
-    const div = document.getElementById('msgInfo');
-    this.map_.getContainer().removeChild(div);
-
-    this.getImpl().deactivateClick(this.map_);
+    this.getImpl().deactivate(this.map_);
   }
   /**
    * This function gets activation button
@@ -124,4 +114,24 @@ export default class SearchpanelControl extends M.Control {
   }
 
   // Add your own functions
+
+  addEvents(html, fields) {
+    // Query Selector
+    this.loadButton = html.querySelector('button#m-searchpanel-loadButton');
+    this.clearButton = html.querySelector('button#m-searchpanel-clearButton');
+    console.log(html.querySelectorAll('.m-searchpanel-opciones-busqueda'));
+
+
+    // Add Event Listener
+    this.loadButton.addEventListener('click', () => this.load());
+    this.clearButton.addEventListener('click', () => this.clear());
+  }
+
+  load() {
+    alert('Se ha pinchado el boton ejecutar');
+  }
+
+  clear() {
+    alert('Se ha pinchado el boton limpiar');
+  }
 }

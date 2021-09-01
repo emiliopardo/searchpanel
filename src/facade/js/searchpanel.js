@@ -16,7 +16,8 @@ export default class Searchpanel extends M.Plugin {
    * @param {Object} impl implementation object
    * @api stable
    */
-  constructor() {
+  constructor(config) {
+    
     super();
     /**
      * Facade of the map
@@ -24,6 +25,11 @@ export default class Searchpanel extends M.Plugin {
      * @type {M.Map}
      */
     this.map_ = null;
+    this.config_ = config;
+
+        // eslint-disable-next-line no-console
+        console.log(this.config_);
+
 
     /**
      * Array of controls
@@ -49,13 +55,14 @@ export default class Searchpanel extends M.Plugin {
    * @api stable
    */
   addTo(map) {
-    this.controls_.push(new SearchpanelControl());
+    this.controls_.push(new SearchpanelControl(this.config_));
     this.map_ = map;
     // panel para agregar control - no obligatorio
     this.panel_ = new M.ui.Panel('panelSearchpanel', {
+      className: 'search-panel',
       collapsible: true,
       position: M.ui.position.TR,
-      collapsedButtonClass: 'g-cartografia-flecha-izquierda',
+      collapsedButtonClass: 'g-cartografia-prismaticos',
     });
     this.panel_.addControls(this.controls_);
     map.addPanels(this.panel_);
