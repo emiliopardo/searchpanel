@@ -88,6 +88,53 @@ div.m-searchpanel-title {
   font-size: 0.8em;
 }
 
+#m-searchpanel-result-content {
+  height: calc(100vh - 133px);
+  display: none;
+  overflow-y: auto;
+}
+
+#m-searchpanel-result-content > div > table {
+  border-collapse: collapse;
+  width: 100%;
+  height: 90px;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-bottom: 10px;
+  cursor: pointer;
+  margin: 0;
+  border-bottom: 2px solid rgba(0, 128, 128, 0.5);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#m-searchpanel-result-content > div > table:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+  box-sizing: border-box;
+}
+
+#m-searchpanel-result-content > div > table td.key {
+  font-weight: 700 !important;
+  font-size: 0.9 em !important;
+  padding-left: 5px !important;
+}
+
+#m-searchpanel-result-content > div > table td.value {
+  font-size: 0.9 em !important;
+  text-align: right !important;
+  padding-right: 5px !important;
+}
+
+#m-searchpanel-result-content > div > table tr {
+  width: 100%;
+  border-top: 1px solid rgba(0, 0, 0, 0.09);
+  border-top-style: dashed;
+}
+
+#m-searchpanel-result-pagination {
+  display: none;
+}
+
 .m-searchpanel-buttons {
   width: 100%;
   height: 50px;
