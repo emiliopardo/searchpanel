@@ -17,7 +17,7 @@ export default class Searchpanel extends M.Plugin {
    * @api stable
    */
   constructor(config) {
-    
+
     super();
     /**
      * Facade of the map
@@ -26,10 +26,6 @@ export default class Searchpanel extends M.Plugin {
      */
     this.map_ = null;
     this.config_ = config;
-
-        // eslint-disable-next-line no-console
-        console.log(this.config_);
-
 
     /**
      * Array of controls
@@ -75,7 +71,7 @@ export default class Searchpanel extends M.Plugin {
    * @function
    * @api stable
    */
-  getMetadata(){
+  getMetadata() {
     return this.metadata_;
   }
 }
