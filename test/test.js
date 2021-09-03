@@ -67,6 +67,11 @@ const configPlayas = {
       field: 'nombre_municipio',
       alias: 'Municipio',
       label: 'Escribe el nombre del Municipio',
+    },
+    {
+      field:'provincia',
+      alias: 'Provincia',
+      label: 'Escribe el nombre de la Provincia'
     }
   ],
   infoFields: [
@@ -84,7 +89,7 @@ const configPlayas = {
     },
     {
       field: 'salvamento_y_socorrismo',
-      alias: 'salvamento y Socorrismo'
+      alias: 'Salvamento y Socorrismo'
     }
   ]
 }
