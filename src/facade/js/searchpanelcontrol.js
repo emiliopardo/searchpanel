@@ -28,10 +28,9 @@ export default class SearchpanelControl extends M.Control {
     this.config_ = config;
     this.title_ = this.config_.title;
     this.fields_ = this.config_.fields;
-    this.infoFields = this.config_.infoFields;
-    console.log(this.infoFields);
+    this.infoFields_ = this.config_.infoFields;
     this.geosearchUrl_ = this.config_.geosearchUrl + "q=";
-    this.otherParameters_ = '&rows=20&start=0&srs=EPSG%3A25830';
+    this.otherParameters_ = '&rows=80&start=0&srs=EPSG%3A25830';
     this.maxRecordsPage_ = 8;
     this.totalRecords_ = null;
     this.pageNumber_ = 1;
@@ -138,22 +137,30 @@ export default class SearchpanelControl extends M.Control {
     this.loadButton = html.querySelector('button#m-searchpanel-loadButton');
     this.clearButton = html.querySelector('button#m-searchpanel-clearButton');
     this.searchOptions = html.querySelectorAll('input[type=text]');
+    this.searchPanel_ = html.querySelector('div#m-searchpanel-content');
     this.resultPanel_ = html.querySelector('div#m-searchpanel-result-content');
+    this.results_ = html.querySelector('div#results');
+    this.resultPagination_ = html.querySelector('div#m-searchpanel-result-pagination');
+    this.previusPageEl = html.querySelector('td#previusPage');
+    this.nextPageEl = html.querySelector('td#nextPage');
+    this.recordsTotalEl = html.querySelector('span#recordsTotal');
+    this.recordsNumberEl = html.querySelector('span#recordsNumber');
 
     // Add Event Listener
-    this.loadButton.addEventListener('click', () => this.load(html));
-    this.clearButton.addEventListener('click', () => this.clear(html));
+    this.loadButton.addEventListener('click', () => this.load());
+    this.clearButton.addEventListener('click', () => this.clear());
+    this.previusPageEl.addEventListener('click', () => this.previusPage());
+    this.nextPageEl.addEventListener('click', () => this.nextPage());
     // listener para input textbox
     for (let i = 0; i < this.searchOptions.length; i++) {
       this.searchOptions[i].addEventListener('change', () => this.enableButtons(html));
     }
   }
 
-  load(html) {
+  load() {
     let query = '';
     let fieldList = new Array();
     let arrayFeaturesMapeaGeoJSON = new Array();
-    this.searchOptions = html.querySelectorAll('input[type=text]');
     for (let i = 0; i < this.searchOptions.length; i++) {
       fieldList.push(this.searchOptions[i].id + ':"' + this.searchOptions[i].value + '"');
     }
@@ -169,7 +176,6 @@ export default class SearchpanelControl extends M.Control {
     console.log(this.geosearchUrl_ + encodeURI(query) + this.otherParameters_);
     M.remote.get(this.geosearchUrl_ + encodeURI(query) + this.otherParameters_).then((res) => {
       let resposeGeosearch = JSON.parse(res.text);
-      this.totalRecords_ = resposeGeosearch.response.numFound;
       resposeGeosearch.response.docs.forEach((element) => {
         const feature = wktFormatter.readFeature(element.geom, {
           dataProjection: projection,
@@ -179,69 +185,64 @@ export default class SearchpanelControl extends M.Control {
         const featureMapea = M.impl.Feature.olFeature2Facade(feature);
         arrayFeaturesMapeaGeoJSON.push(featureMapea.getGeoJSON());
       })
-      this.showResults(arrayFeaturesMapeaGeoJSON, html);
+      this.showResults(arrayFeaturesMapeaGeoJSON);
     })
   }
 
-
-  clear(html) {
-    this.searchOptions = html.querySelectorAll('input[type=text]');
+  clear() {
+    this.pageNumber_ = 1;
     for (let i = 0; i < this.searchOptions.length; i++) {
       this.searchOptions[i].value = '';
     }
+    this.searchPanel_.style.display = 'block';
+    this.resultPanel_.style.display = 'none';
+    this.resultPagination_.style.display = 'none';
+    this.loadButton.disabled = true;
+    this.clearButton.disabled = true;
+  }
+
+  enableButtons() {
     this.loadButton.disabled = false;
     this.clearButton.disabled = false;
   }
 
-  enableButtons(html) {
-    this.loadButton = html.querySelector('button#m-searchpanel-loadButton');
-    this.clearButton = html.querySelector('button#m-searchpanel-clearButton');
-    this.loadButton.disabled = false;
-    this.clearButton.disabled = false;
+  paginate(array) {
+    return array.slice((this.pageNumber_ - 1) * this.maxRecordsPage_, this.pageNumber_ * this.maxRecordsPage_);
   }
 
-  paginate(array, page_size, page_number) {
-    return array.slice((page_number - 1) * page_size, page_number * page_size);
-  }
-
-  createHtmlTable(dataList) {
-    let htmlResult = "";
-    for (let i = 0; i < dataList.length; i++) {
-      let info = dataList[i];
-      htmlResult +=
-        '<table id="' +
-        info.properties["solrid"] +
-        '" class"result">\n<tbody class="pointer-none">\n<tr class="rowResult" >\n<td class="key">Municipio</td>\n<td class="value">' +
-        info.properties["municipio"] +
-        '</td>\n</tr>\n<tr class="rowResult">\n<td class="key">Provincia</td>\n<td class="value">' +
-        info.properties["nombre_provincia"] +
-        "</td>\n</tr>\n</tbody>\n</table>\n";
+  createResultContent(dataList) {
+    let htmlResult = '';
+    for (let x = 0; x < dataList.length; x++) {
+      htmlResult += this.recordInfoTable(dataList[x]);
     }
     return htmlResult;
   }
 
-  showResults(data, html) {
+  recordInfoTable(record) {
+    let recordTable = '<table id="' +
+      record.properties["solrid"] +
+      '" class"result">\n<tbody class="pointer-none">\n<tr class="rowResult" >\n';
+    for (let y = 0; y < this.infoFields_.length; y++) {
+      recordTable += '<td class="key">' + this.infoFields_[y].alias + '</td>\n<td class="value">' + record.properties[this.infoFields_[y].field] + '</td>\n</tr>'
+    }
+    recordTable += '\n</tbody>\n</table>\n';
+    return recordTable;
+  }
+
+  showResults(data) {
     this.dataList_ = data;
-    this.pagination_ = html.querySelector('m-searchpanel-result-pagination');
-    this.searchPanel_ = html.querySelector('div#m-searchpanel-content');
-    this.resultPanel_ = html.querySelector('div#m-searchpanel-result-content');
-    this.results_ = html.querySelector('div#results');
-    this.loadButton_ = html.querySelector('button#m-searchpanel-loadButton');
-    this.previusPageEl = html.querySelector('td#previusPage');
-    this.nextPageEl = html.querySelector('td#nextPage');
-    this.recordsTotalEl = html.querySelector('span#recordsTotal');
-    this.recordsNumberEl = html.querySelector('span#recordsNumber');
-    if (this.totalRecords_ > 0) {
-      if (this.totalRecords_ % this.maxRecordsPage_ == 0) {
-        this.pageTotal_ = this.totalRecords_ / this.maxRecordsPage_;
+    if (this.dataList_.length > 0) {
+      this.totalRecords_ = this.dataList_.length
+      if (this.dataList_.length % this.maxRecordsPage_ == 0) {
+        this.pageTotal_ = this.dataList_.length / this.maxRecordsPage_;
       } else {
-        this.pageTotal_ = Math.floor(this.totalRecords_ / this.maxRecordsPage_) + 1;
+        this.pageTotal_ = Math.floor(this.dataList_.length / this.maxRecordsPage_) + 1;
       }
-      let paginatedRecords = this.paginate(this.dataList_, this.maxRecordsPage_, this.pageNumber_);
-      let htmlTable = this.createHtmlTable(paginatedRecords);
-      //let htmlPagination = this.createPaginationHTML(html);
-      this.results_.innerHTML = htmlTable;
-      this.loadButton_.disabled = true;
+      let paginatedRecords = this.paginate(this.dataList_);
+      let resultContent = this.createResultContent(paginatedRecords);
+      this.createResultPagination();
+      this.results_.innerHTML = resultContent;
+      this.loadButton.disabled = true;
     } else {
       this.results_.innerHTML =
         '<table class="center">\n' +
@@ -253,30 +254,73 @@ export default class SearchpanelControl extends M.Control {
         "</tr>\n" +
         "</tbody>\n" +
         "</table>";
-
-
       this.recordsNumberEl.textContent = "0";
       this.recordsTotalEl.textContent = "0";
-      this.nextPageEl.style.visibility = "hidden";
       this.previusPageEl.style.visibility = "hidden";
+      this.nextPageEl.style.visibility = "hidden";
     }
-    //this.pagination_.style.display = "block";
+    this.resultPagination_.style.display = "block";
     this.resultPanel_.style.display = "block"
     this.searchPanel_.style.display = "none"
   }
 
-  // createPaginationHTML() {
-  //   recordsTotalEl.textContent = totalRecords;
-  //   if (totalRecords < maxRecordsPage) {
-  //     recordsNumberEl.textContent = totalRecords;
-  //   } else {
-  //     recordsNumberEl.textContent = "1 - " + maxRecordsPage;
-  //   }
-  //   if (page_total > 1) {
-  //     nextPageEl.style.visibility = "visible";
-  //   } else {
-  //     previusPageEl.style.visibility = "hidden";
-  //     nextPageEl.style.visibility = "hidden";
-  //   }
-  // }
+  createResultPagination() {
+    this.recordsTotalEl.textContent = this.totalRecords_;
+    if (this.totalRecords_ < this.maxRecordsPage_) {
+      this.recordsNumberEl.textContent = this.totalRecords_;
+      this.previusPageEl.style.visibility = "hidden";
+      this.nextPageEl.style.visibility = "hidden";
+    } else {
+      this.recordsNumberEl.textContent = "1 - " + this.maxRecordsPage_;
+    }
+
+    if (this.pageNumber_ == 1 & (this.totalRecords_ > this.maxRecordsPage_)) {
+      this.previusPageEl.style.visibility = "hidden";
+      this.nextPageEl.style.visibility = "visible";
+    } else if (this.pageNumber_ == 1 & (this.totalRecords_ <= this.maxRecordsPage_)) {
+      this.previusPageEl.style.visibility = "hidden";
+      this.nextPageEl.style.visibility = "hidden";
+    }
+    else {
+      this.previusPageEl.style.visibility = "visible";
+      this.nextPageEl.style.visibility = "visible";
+    }
+  }
+
+  previusPage() {
+    this.pageNumber_ -= 1;
+    let paginatedRecords = this.paginate(this.dataList_);
+    let htmlRecords = this.createResultContent(paginatedRecords);
+    this.results_.innerHTML = htmlRecords;
+    if (this.pageNumber_ == 1) {
+      this.recordsNumberEl.textContent = "1 - " + this.pageNumber_ * this.maxRecordsPage_;
+      this.previusPageEl.style.visibility = "hidden";
+      this.nextPageEl.style.visibility = "visible"
+    } else {
+      this.recordsNumberEl.textContent = this.pageNumber_ * this.maxRecordsPage_ - (this.maxRecordsPage_ - 1) + ' - ' + this.pageNumber_ * this.maxRecordsPage_;
+      this.previusPageEl.style.visibility = "visible";
+      this.nextPageEl.style.visibility = "visible";
+    }
+  }
+
+  nextPage() {
+    this.pageNumber_ += 1;
+    let paginatedRecords = this.paginate(this.dataList_);
+    let htmlRecords = this.createResultContent(paginatedRecords);
+    this.results_.innerHTML = htmlRecords;
+    if (this.pageNumber_ == this.pageTotal_) {
+      this.recordsNumberEl.textContent = (this.totalRecords_ - paginatedRecords.length) + ' - ' + this.totalRecords_;
+      this.previusPageEl.style.visibility = "visible";
+      this.nextPageEl.style.visibility = "hidden";
+    } else {
+      this.recordsNumberEl.textContent =
+        this.pageNumber_ * this.maxRecordsPage_ -
+        (this.maxRecordsPage_ - 1) +
+        ' - ' +
+        this.pageNumber_ * this.maxRecordsPage_;
+      this.previusPageEl.style.visibility = "visible";
+      this.nextPageEl.style.visibility = "visible";
+    }
+  }
+
 }
