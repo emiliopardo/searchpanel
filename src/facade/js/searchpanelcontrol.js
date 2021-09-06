@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-
 /**
  * @module M/control/SearchpanelControl
  */
@@ -25,26 +23,28 @@ export default class SearchpanelControl extends M.Control {
     // 2. implementation of this control
     const impl = new SearchpanelImplControl();
     super(impl, 'Searchpanel');
-    this.config_ = config;
-    this.title_ = this.config_.title;
-    this.fields_ = this.config_.fields;
-    this.infoFields_ = this.config_.infoFields;
-    this.geosearchUrl_ = this.config_.geosearchUrl + "q=";
-    this.otherParameters_ = '&rows=80&start=0&srs=EPSG%3A25830';
-    this.maxRecordsPage_ = 8;
-    this.totalRecords_ = null;
-    this.pageNumber_ = 1;
-    this.pageTotal_ = null;
-    this.dataList_ = new Array();
-    this.capaGeoJSON_ = null;
-    this.wktFormatter_ = new ol.format.WKT();
-    this.selectedFeatures_ = new Array();
+    this.config = config;
+    this.maxResults= this.config.maxResults
+    this.title = this.config.title;
+    this.fields = this.config.fields;
+    this.infofields = this.config.infoFields;
+    this.geosearchUrl = this.config.geosearchUrl + "q=";
+    this.otherParameters = '&rows='+this.maxResults+'&start=0&srs=EPSG%3A25830';
+    this.maxRecordsPage = 8;
+    this.totalRecords = null;
+    this.pageNumber = 1;
+    this.pageTotal = null;
+    this.dataList = new Array();
+    this.capaGeoJSON = null;
+    this.wktFormatter = new ol.format.WKT();
+    this.selectedFeatures = null;
+    this.arrayFeaturesMapeaGeoJSON = null;
 
     this.stylePoint = new M.style.Point({
       radius: 5,
       fill: {
         color: "#00796b",
-        opacity: 0.1,
+        opacity: 0.7,
       },
       stroke: {
         color: "#00796b",
@@ -54,7 +54,18 @@ export default class SearchpanelControl extends M.Control {
       radius: 5,
       fill: {
         color: "#00796b",
-        opacity: 0.1,
+        opacity: 0.7,
+      },
+      stroke: {
+        color: "#00796b",
+      },
+    });
+
+    this.styleLine = new M.style.Line({
+      radius: 5,
+      fill: {
+        color: "#00796b",
+        opacity: 0.7,
       },
       stroke: {
         color: "#00796b",
@@ -72,12 +83,12 @@ export default class SearchpanelControl extends M.Control {
    * @api stable
    */
   createView(map) {
-    let templateVars = { vars: { title: this.title_, fields: this.fields_ } };
+    let templateVars = { vars: { title: this.title, fields: this.fields } };
 
     return new Promise((success, fail) => {
       const html = M.template.compileSync(template, templateVars);
       this.element = html;
-      this.addEvents(html, this.fields_);
+      this.addEvents(html, this.fields);
       success(html);
     });
   }
@@ -137,30 +148,91 @@ export default class SearchpanelControl extends M.Control {
     this.loadButton = html.querySelector('button#m-searchpanel-loadButton');
     this.clearButton = html.querySelector('button#m-searchpanel-clearButton');
     this.searchOptions = html.querySelectorAll('input[type=text]');
-    this.searchPanel_ = html.querySelector('div#m-searchpanel-content');
-    this.resultPanel_ = html.querySelector('div#m-searchpanel-result-content');
-    this.results_ = html.querySelector('div#results');
-    this.resultPagination_ = html.querySelector('div#m-searchpanel-result-pagination');
-    this.previusPageEl = html.querySelector('td#previusPage');
-    this.nextPageEl = html.querySelector('td#nextPage');
-    this.recordsTotalEl = html.querySelector('span#recordsTotal');
-    this.recordsNumberEl = html.querySelector('span#recordsNumber');
+    this.searchPanel = html.querySelector('div#m-searchpanel-content');
+    this.resultPanel = html.querySelector('div#m-searchpanel-result-content');
+    this.results = html.querySelector('div#results');
+    this.resultPagination = html.querySelector('div#m-searchpanel-result-pagination');
+    this.previusPage = html.querySelector('td#previusPage');
+    this.nextPage = html.querySelector('td#nextPage');
+    this.recordsTotal = html.querySelector('span#recordsTotal');
+    this.recordsNumber = html.querySelector('span#recordsNumber');
 
     // Add Event Listener
     this.loadButton.addEventListener('click', () => this.load());
     this.clearButton.addEventListener('click', () => this.clear());
-    this.previusPageEl.addEventListener('click', () => this.previusPage());
-    this.nextPageEl.addEventListener('click', () => this.nextPage());
+    this.previusPage.addEventListener('click', () => this.showPreviusPage());
+    this.nextPage.addEventListener('click', () => this.showNextPage());
     // listener para input textbox
     for (let i = 0; i < this.searchOptions.length; i++) {
       this.searchOptions[i].addEventListener('change', () => this.enableButtons(html));
     }
+    this.results.addEventListener('click', (event) => {
+      this.map_.removeLayers(this.capaGeoJSON);
+      this.selectedFeatures = new Array();
+      let record = event.target.closest('table');
+      let find = false;
+      do {
+        for (let i = 0; i < this.arrayFeaturesMapeaGeoJSON.length; i++) {
+          if (this.arrayFeaturesMapeaGeoJSON[i].id == record.id) {
+            this.selectedFeatures.push(this.arrayFeaturesMapeaGeoJSON[i]);
+            find = true;
+          }
+        }
+      } while (!find);
+
+      let style = this.setStyle(this.selectedFeatures[0].geometry.type);
+
+      this.capaGeoJSON = new M.layer.GeoJSON({
+        extract: false,
+        source: {
+          crs: { properties: { name: "EPSG:25830" }, type: "name" },
+          features: this.selectedFeatures,
+          type: "FeatureCollection",
+        },
+        name: 'result',
+      });
+      this.capaGeoJSON.setStyle(style);
+      this.map_.addLayers(this.capaGeoJSON);
+      this.capaGeoJSON.displayInLayerSwitcher = false;
+      this.capaGeoJSON.calculateMaxExtent().then((res)=>{
+        this.map_.setBbox(res);
+      })
+    });
+  }
+
+  setStyle(geometryTye) {
+    let style = null;
+    switch (geometryTye) {
+      case geometryTye = 'Point':
+        style = this.stylePoint;
+        break;
+      case geometryTye = 'MultiPoint':
+        style = this.stylePoint;
+        break;
+      case geometryTye = 'LineString':
+        style = this.styleLine;
+        break;
+      case geometryTye = 'MultiLineString':
+        style = this.styleLine;
+        break;
+      case geometryTye = 'Polygon':
+        style = this.stylePolygon;
+        break;
+      case geometryTye = 'MultiPolygon':
+        style = this.stylePolygon;
+        break;
+      default:
+        style = null
+        break;
+    }
+    return style;
+
   }
 
   load() {
     let query = '';
     let fieldList = new Array();
-    let arrayFeaturesMapeaGeoJSON = new Array();
+    this.arrayFeaturesMapeaGeoJSON = new Array();
     for (let i = 0; i < this.searchOptions.length; i++) {
       fieldList.push(this.searchOptions[i].id + ':"' + this.searchOptions[i].value + '"');
     }
@@ -172,9 +244,8 @@ export default class SearchpanelControl extends M.Control {
       }
     }
     const projection = this.map_.getProjection().code;
-    const wktFormatter = this.wktFormatter_;
-    console.log(this.geosearchUrl_ + encodeURI(query) + this.otherParameters_);
-    M.remote.get(this.geosearchUrl_ + encodeURI(query) + this.otherParameters_).then((res) => {
+    const wktFormatter = this.wktFormatter;
+    M.remote.get(this.geosearchUrl + encodeURI(query) + this.otherParameters).then((res) => {
       let resposeGeosearch = JSON.parse(res.text);
       resposeGeosearch.response.docs.forEach((element) => {
         const feature = wktFormatter.readFeature(element.geom, {
@@ -183,20 +254,20 @@ export default class SearchpanelControl extends M.Control {
         feature.setId(element.solrid);
         feature.setProperties(element);
         const featureMapea = M.impl.Feature.olFeature2Facade(feature);
-        arrayFeaturesMapeaGeoJSON.push(featureMapea.getGeoJSON());
+        this.arrayFeaturesMapeaGeoJSON.push(featureMapea.getGeoJSON());
       })
-      this.showResults(arrayFeaturesMapeaGeoJSON);
+      this.showResults(this.arrayFeaturesMapeaGeoJSON);
     })
   }
 
   clear() {
-    this.pageNumber_ = 1;
+    this.pageNumber = 1;
     for (let i = 0; i < this.searchOptions.length; i++) {
       this.searchOptions[i].value = '';
     }
-    this.searchPanel_.style.display = 'block';
-    this.resultPanel_.style.display = 'none';
-    this.resultPagination_.style.display = 'none';
+    this.searchPanel.style.display = 'block';
+    this.resultPanel.style.display = 'none';
+    this.resultPagination.style.display = 'none';
     this.loadButton.disabled = true;
     this.clearButton.disabled = true;
   }
@@ -207,7 +278,7 @@ export default class SearchpanelControl extends M.Control {
   }
 
   paginate(array) {
-    return array.slice((this.pageNumber_ - 1) * this.maxRecordsPage_, this.pageNumber_ * this.maxRecordsPage_);
+    return array.slice((this.pageNumber - 1) * this.maxRecordsPage, this.pageNumber * this.maxRecordsPage);
   }
 
   createResultContent(dataList) {
@@ -221,30 +292,30 @@ export default class SearchpanelControl extends M.Control {
   recordInfoTable(record) {
     let recordTable = '<table id="' +
       record.properties["solrid"] +
-      '" class"result">\n<tbody class="pointer-none">\n<tr class="rowResult" >\n';
-    for (let y = 0; y < this.infoFields_.length; y++) {
-      recordTable += '<td class="key">' + this.infoFields_[y].alias + '</td>\n<td class="value">' + record.properties[this.infoFields_[y].field] + '</td>\n</tr>'
+      '" class="record-result">\n<tbody class="pointer-none">\n<tr class="rowResult" >\n';
+    for (let y = 0; y < this.infofields.length; y++) {
+      recordTable += '<td class="key">' + this.infofields[y].alias + '</td>\n<td class="value">' + record.properties[this.infofields[y].field] + '</td>\n</tr>'
     }
     recordTable += '\n</tbody>\n</table>\n';
     return recordTable;
   }
 
   showResults(data) {
-    this.dataList_ = data;
-    if (this.dataList_.length > 0) {
-      this.totalRecords_ = this.dataList_.length
-      if (this.dataList_.length % this.maxRecordsPage_ == 0) {
-        this.pageTotal_ = this.dataList_.length / this.maxRecordsPage_;
+    this.dataList = data;
+    if (this.dataList.length > 0) {
+      this.totalRecords = this.dataList.length
+      if (this.dataList.length % this.maxRecordsPage == 0) {
+        this.pageTotal = this.dataList.length / this.maxRecordsPage;
       } else {
-        this.pageTotal_ = Math.floor(this.dataList_.length / this.maxRecordsPage_) + 1;
+        this.pageTotal = Math.floor(this.dataList.length / this.maxRecordsPage) + 1;
       }
-      let paginatedRecords = this.paginate(this.dataList_);
+      let paginatedRecords = this.paginate(this.dataList);
       let resultContent = this.createResultContent(paginatedRecords);
       this.createResultPagination();
-      this.results_.innerHTML = resultContent;
+      this.results.innerHTML = resultContent;
       this.loadButton.disabled = true;
     } else {
-      this.results_.innerHTML =
+      this.results.innerHTML =
         '<table class="center">\n' +
         "<tbody>\n" +
         "<tr>\n" +
@@ -254,72 +325,72 @@ export default class SearchpanelControl extends M.Control {
         "</tr>\n" +
         "</tbody>\n" +
         "</table>";
-      this.recordsNumberEl.textContent = "0";
-      this.recordsTotalEl.textContent = "0";
-      this.previusPageEl.style.visibility = "hidden";
-      this.nextPageEl.style.visibility = "hidden";
+      this.recordsNumber.textContent = "0";
+      this.recordsTotal.textContent = "0";
+      this.previusPage.style.visibility = "hidden";
+      this.nextPage.style.visibility = "hidden";
     }
-    this.resultPagination_.style.display = "block";
-    this.resultPanel_.style.display = "block"
-    this.searchPanel_.style.display = "none"
+    this.resultPagination.style.display = "block";
+    this.resultPanel.style.display = "block"
+    this.searchPanel.style.display = "none"
   }
 
   createResultPagination() {
-    this.recordsTotalEl.textContent = this.totalRecords_;
-    if (this.totalRecords_ < this.maxRecordsPage_) {
-      this.recordsNumberEl.textContent = this.totalRecords_;
-      this.previusPageEl.style.visibility = "hidden";
-      this.nextPageEl.style.visibility = "hidden";
+    this.recordsTotal.textContent = this.totalRecords;
+    if (this.totalRecords < this.maxRecordsPage) {
+      this.recordsNumber.textContent = this.totalRecords;
+      this.previusPage.style.visibility = "hidden";
+      this.nextPage.style.visibility = "hidden";
     } else {
-      this.recordsNumberEl.textContent = "1 - " + this.maxRecordsPage_;
+      this.recordsNumber.textContent = "1 - " + this.maxRecordsPage;
     }
 
-    if (this.pageNumber_ == 1 & (this.totalRecords_ > this.maxRecordsPage_)) {
-      this.previusPageEl.style.visibility = "hidden";
-      this.nextPageEl.style.visibility = "visible";
-    } else if (this.pageNumber_ == 1 & (this.totalRecords_ <= this.maxRecordsPage_)) {
-      this.previusPageEl.style.visibility = "hidden";
-      this.nextPageEl.style.visibility = "hidden";
+    if (this.pageNumber == 1 & (this.totalRecords > this.maxRecordsPage)) {
+      this.previusPage.style.visibility = "hidden";
+      this.nextPage.style.visibility = "visible";
+    } else if (this.pageNumber == 1 & (this.totalRecords <= this.maxRecordsPage)) {
+      this.previusPage.style.visibility = "hidden";
+      this.nextPage.style.visibility = "hidden";
     }
     else {
-      this.previusPageEl.style.visibility = "visible";
-      this.nextPageEl.style.visibility = "visible";
+      this.previusPage.style.visibility = "visible";
+      this.nextPage.style.visibility = "visible";
     }
   }
 
-  previusPage() {
-    this.pageNumber_ -= 1;
-    let paginatedRecords = this.paginate(this.dataList_);
+  showPreviusPage() {
+    this.pageNumber -= 1;
+    let paginatedRecords = this.paginate(this.dataList);
     let htmlRecords = this.createResultContent(paginatedRecords);
-    this.results_.innerHTML = htmlRecords;
-    if (this.pageNumber_ == 1) {
-      this.recordsNumberEl.textContent = "1 - " + this.pageNumber_ * this.maxRecordsPage_;
-      this.previusPageEl.style.visibility = "hidden";
-      this.nextPageEl.style.visibility = "visible"
+    this.results.innerHTML = htmlRecords;
+    if (this.pageNumber == 1) {
+      this.recordsNumber.textContent = "1 - " + this.pageNumber * this.maxRecordsPage;
+      this.previusPage.style.visibility = "hidden";
+      this.nextPage.style.visibility = "visible"
     } else {
-      this.recordsNumberEl.textContent = this.pageNumber_ * this.maxRecordsPage_ - (this.maxRecordsPage_ - 1) + ' - ' + this.pageNumber_ * this.maxRecordsPage_;
-      this.previusPageEl.style.visibility = "visible";
-      this.nextPageEl.style.visibility = "visible";
+      this.recordsNumber.textContent = this.pageNumber * this.maxRecordsPage - (this.maxRecordsPage - 1) + ' - ' + this.pageNumber * this.maxRecordsPage;
+      this.previusPage.style.visibility = "visible";
+      this.nextPage.style.visibility = "visible";
     }
   }
 
-  nextPage() {
-    this.pageNumber_ += 1;
-    let paginatedRecords = this.paginate(this.dataList_);
+  showNextPage() {
+    this.pageNumber += 1;
+    let paginatedRecords = this.paginate(this.dataList);
     let htmlRecords = this.createResultContent(paginatedRecords);
-    this.results_.innerHTML = htmlRecords;
-    if (this.pageNumber_ == this.pageTotal_) {
-      this.recordsNumberEl.textContent = (this.totalRecords_ - paginatedRecords.length) + ' - ' + this.totalRecords_;
-      this.previusPageEl.style.visibility = "visible";
-      this.nextPageEl.style.visibility = "hidden";
+    this.results.innerHTML = htmlRecords;
+    if (this.pageNumber == this.pageTotal) {
+      this.recordsNumber.textContent = (this.totalRecords - paginatedRecords.length) + ' - ' + this.totalRecords;
+      this.previusPage.style.visibility = "visible";
+      this.nextPage.style.visibility = "hidden";
     } else {
-      this.recordsNumberEl.textContent =
-        this.pageNumber_ * this.maxRecordsPage_ -
-        (this.maxRecordsPage_ - 1) +
+      this.recordsNumber.textContent =
+        this.pageNumber * this.maxRecordsPage -
+        (this.maxRecordsPage - 1) +
         ' - ' +
-        this.pageNumber_ * this.maxRecordsPage_;
-      this.previusPageEl.style.visibility = "visible";
-      this.nextPageEl.style.visibility = "visible";
+        this.pageNumber * this.maxRecordsPage;
+      this.previusPage.style.visibility = "visible";
+      this.nextPage.style.visibility = "visible";
     }
   }
 
