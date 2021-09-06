@@ -104,6 +104,7 @@ export default class SearchpanelControl extends M.Control {
     // calls super to manage de/activation
     super.activate();
     this.getImpl().activate(this.map_);
+    
   }
   /**
    * This function is called on the control deactivation

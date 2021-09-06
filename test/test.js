@@ -4,7 +4,7 @@ const map = M.map({
   container: 'mapjs',
 });
 
-map.addControls(["ScaleLine", "Mouse", "panzoombar"]);
+map.addControls(['ScaleLine', 'Mouse', 'panzoombar',]);
 
 
 
