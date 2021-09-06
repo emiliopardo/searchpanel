@@ -60,16 +60,16 @@ Para el correcto funcionamiento del plugin es necesario pasarle en su constructo
 - **maxResults [integer]:**  Número máximo de registros que se desea recibir. Esto permite  el número de resultados devueltos facilitando la paginación y los tiempos de respuesta del geosearch
 - **fields: [array]** Campos sobre los que se desea buscar.(Array). Listado de campos que se desea que aparezcan en el Panel de buscador para realizar los filtros. Es necesario incluir los siguientes parámetros:
 
-   -***field:*** Nombre del campo en el core de geosearh
-   -***alias:*** Texto descriptivo del campo
-   -***label:*** Texto a mostar a modo de ayuda 
+   - ***field:*** Nombre del campo en el core de geosearh
+   - ***alias:*** Texto descriptivo del campo
+   - ***label:*** Texto a mostar a modo de ayuda 
 
 
 - **infoFields: [array]** Campos que se desean mostrar una vez optenidos los resultados. El orden de definición de estos afecta al orden de aparición en la tabla resultante.
 
 
-   -***field:*** Nombre del campo en el core de geosearh
-   -***alias:*** Texto descriptivo del campo
+   - ***field:*** Nombre del campo en el core de geosearh
+   - ***alias:*** Texto descriptivo del campo
 
 
 
