@@ -71,7 +71,7 @@ div.m-searchpanel-title {
 }
 
 #m-searchpanel-content {
-  height: calc(100vh - 106px);
+  height: calc(100vh - 102px);
   overflow-y: auto;
 }
 
@@ -89,7 +89,7 @@ div.m-searchpanel-title {
 }
 
 #m-searchpanel-result-content {
-  height: calc(100vh - 147px);
+  height: calc(100vh - 145px);
   display: none;
   overflow-y: auto;
 }
