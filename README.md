@@ -1,28 +1,14 @@
-# M.plugin.Searchpanel
+# Searchpanel
 
-## Api.json
+[![Build Tool](https://img.shields.io/badge/build-Webpack-green.svg)](https://github.com/sigcorporativo-ja/Mapea4-dev-webpack)
 
-INTEGRACIÓN DE PARÁMETROS EN API REST
+## Descripción
 
-OPCIONES:  
-1. Nuevo parámetro en la API REST normalmente porque requiera parámetros de configuración.
-Example: <url_mapea>?geosearch=[params]
-Example: <url_mapea>?printer=[params]
+ Plugin de [Mapea](https://github.com/sigcorporativo-ja/Mapea4) para la generación automática de paneles de búsquedas para realizar consultas a diferentes cores de geosearch. 
 
-2. Nuevo valor para el parámetro plugins, el plugin no requiere configuración
-Example: <url_mapea>?plugins=measurebar,streetview
+![Imagen](./images/searchpanelPlugin.png)
 
 
-### Plugin sin parámetros
-
-```
-{
-   "url": {
-      "name": "nombre_plugin"
-   },
-   "constructor": "M.plugin.nombre_plugin"
-}
-```
 ### Plugin con parámetros
 
 ```
