@@ -59,6 +59,7 @@ export default class Searchpanel extends M.Plugin {
       collapsible: true,
       position: M.ui.position.TR,
       collapsedButtonClass: 'g-cartografia-prismaticos',
+      tooltip: this.config_.title,
     });
     this.panel_.addControls(this.controls_);
     map.addPanels(this.panel_);
