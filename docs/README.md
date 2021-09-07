@@ -126,6 +126,6 @@ const mp = new M.plugin.Searchpanel(configSearchPanel);
 map.addPlugin(mp);
 ```
 
-##Video Demo
+## Video Demo
 
-Para comprobar el funcionamiento de este plugin se puede descargar el Video el cual contempla la configuración y carda del plugin con diferentes geosearchs
+Para comprobar el funcionamiento de este plugin se puede descargar el Video el cual contempla la configuración y carda del plugin con diferentes geosearch
