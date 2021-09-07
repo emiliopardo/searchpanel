@@ -155,8 +155,8 @@ const configPlayas = {
   ]
 }
 
-const mp = new Searchpanel(configDirectorioEmpresas);
-//const mp = new Searchpanel(configEspaciosProductivos);
+//const mp = new Searchpanel(configDirectorioEmpresas);
+const mp = new Searchpanel(configEspaciosProductivos);
 //const mp = new Searchpanel(configMunicipos);
 //const mp = new Searchpanel(configPlayas);
 
