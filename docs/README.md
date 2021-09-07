@@ -128,4 +128,4 @@ map.addPlugin(mp);
 
 ## Video Demo
 
-Para comprobar el funcionamiento de este plugin se puede descargar el Video el cual contempla la configuración y carda del plugin con diferentes geosearch
+Para comprobar el funcionamiento de este plugin se puede descargar el [Video](https://github.com/emiliopardo/searchpanel/blob/master/docs/video/searchpanel.webm?raw=true) el cual contempla la configuración y carda del plugin con diferentes geosearch
