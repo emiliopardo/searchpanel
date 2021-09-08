@@ -202,9 +202,14 @@ const configPlayas = {
   ]
 }
 
+<<<<<<< HEAD
 const mp = new Searchpanel(configFuentesyManantiales);
 //const mp = new Searchpanel(configDirectorioEmpresas);
 //const mp = new Searchpanel(configEspaciosProductivos);
+=======
+//const mp = new Searchpanel(configDirectorioEmpresas);
+const mp = new Searchpanel(configEspaciosProductivos);
+>>>>>>> 350bbf54b7e29e3dec350010b9aa3abcf9c8dc9e
 //const mp = new Searchpanel(configMunicipos);
 //const mp = new Searchpanel(configPlayas);
 
