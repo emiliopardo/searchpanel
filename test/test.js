@@ -8,7 +8,54 @@ map.addControls(['ScaleLine', 'Mouse', 'panzoombar',]);
 
 
 
-
+const configFuentesyManantiales = {
+  title: 'Fuentes y Manantiales de Andalucía',
+  geosearchUrl: 'https://geobusquedas-sigc.juntadeandalucia.es/geobusquedas/fuentesymanantiales/search_html?',
+  maxResults: 100,
+  fields: [
+    {
+      field: 'nombre',
+      alias: 'Nombre',
+      label: 'Escribe el nombre',
+    },
+    {
+      field: 'municipio_fuente',
+      alias: 'Municipio',
+      label: 'Escribe el nombre del Municipio',
+    },
+    {
+      field: 'provincia_fuente',
+      alias: 'Provincia',
+      label: 'Escribe el nombre de la Provincia',
+    }
+  ],
+  infoFields: [
+    {
+      field: 'nombre',
+      alias: 'Nombre '
+    },
+    {
+      field: 'imagen',
+      alias: 'imagen'
+    },
+    {
+      field: 'tipo',
+      alias: 'Tipo'
+    },
+    {
+      field: 'enlace',
+      alias: 'Ficha'
+    },
+    {
+      field: 'municipio_fuente',
+      alias: 'Municipio'
+    },
+    {
+      field: 'provincia_fuente',
+      alias: 'Provincia'
+    }
+  ]
+}
 
 
 
@@ -155,7 +202,8 @@ const configPlayas = {
   ]
 }
 
-const mp = new Searchpanel(configDirectorioEmpresas);
+const mp = new Searchpanel(configFuentesyManantiales);
+//const mp = new Searchpanel(configDirectorioEmpresas);
 //const mp = new Searchpanel(configEspaciosProductivos);
 //const mp = new Searchpanel(configMunicipos);
 //const mp = new Searchpanel(configPlayas);
