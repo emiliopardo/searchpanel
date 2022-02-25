@@ -7,8 +7,8 @@
   "parameters": [],
   "files": {
     "ol": {
-      "scripts": ["searchpanel.ol.min.js"],
-      "styles": ["searchpanel.ol.min.css"]
+      "scripts": [],
+      "styles": []
     }
   },
   "metadata": {
@@ -16,11 +16,11 @@
     "uuid_version_plugin": "",
     "version_ficha_metadatos": "",
     "name": "Searchpanel",
-    "description": "Generación de paneles de geosearch",
-    "text": "Plugin de Mapea para la generación automática de paneles de búsquedas para realizar consultas a diferentes cores de geosearch.",
+    "description": "Description of the plugin",
+    "text": "A full text about plugin",
     "version": "1.0.0",
-    "date": "Septiembre, 2021",
-    "author": "Emilio Pardo",
+    "date": "",
+    "author": "",
     "org": "",
     "tags": "mapea,plugin",
     "icon": "./facade/assets/icons/icons.svg",
