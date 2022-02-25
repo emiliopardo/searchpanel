@@ -4,11 +4,15 @@ const map = M.map({
   container: 'mapjs',
 });
 
-map.addControls(['ScaleLine', 'Mouse', 'panzoombar',]);
+map.addControls(['Scale', 'ScaleLine','Mouse', 'panzoom','overviewmap','location','rotate']);
 
 
 
 const configFuentesyManantiales = {
+  options:{
+    position: 'BR'
+  },
+  config: {
   title: 'Fuentes y Manantiales de Andalucía',
   geosearchUrl: 'https://geobusquedas-sigc.juntadeandalucia.es/geobusquedas/fuentesymanantiales/search_html?',
   maxResults: 100,
@@ -56,10 +60,15 @@ const configFuentesyManantiales = {
     }
   ]
 }
+}
 
 
 
 const configDirectorioEmpresas = {
+  options:{
+    position: 'TL'
+  },
+  config: {
   title: 'Buscador de Espacios Productivos',
   geosearchUrl: 'https://www.juntadeandalucia.es/institutodeestadisticaycartografia/geobusquedas/eepp-f1_directorio/search?',
   maxResults: 100,
@@ -92,11 +101,15 @@ const configDirectorioEmpresas = {
       alias: 'Dirección'
     }
   ]
-}
+}}
 
 
 
 const configEspaciosProductivos = {
+  options:{
+    position: 'TL'
+  },
+  config: {
   title: 'Buscador de Espacios Productivos',
   geosearchUrl: 'https://www.juntadeandalucia.es/institutodeestadisticaycartografia/geobusquedas/eepp-f1/search?',
   maxResults: 100,
@@ -135,10 +148,14 @@ const configEspaciosProductivos = {
       alias: 'Provincia'
     }
   ]
-}
+}}
 
 
 const configMunicipos = {
+  options:{
+    position: 'TR'
+  },
+  config: {
   title: 'Buscador de Municipios',
   geosearchUrl: 'http://geobusquedas-sigc.juntadeandalucia.es/sigc/search?',
   maxResults: 200,
@@ -159,9 +176,13 @@ const configMunicipos = {
       alias: 'Provincia'
     }
   ]
-}
+}}
 
 const configPlayas = {
+  options:{
+    position: 'BL'
+  },
+  config: {
   title: 'Buscador de Playas',
   geosearchUrl: 'https://www.juntadeandalucia.es/institutodeestadisticaycartografia/geobusquedas/playas/search?',
   maxResults: 100,
@@ -200,12 +221,12 @@ const configPlayas = {
       alias: 'Salvamento y Socorrismo'
     }
   ]
-}
+}}
 
-const mp = new Searchpanel(configFuentesyManantiales);
+//const mp = new Searchpanel(configFuentesyManantiales);
 //const mp = new Searchpanel(configDirectorioEmpresas);
 //const mp = new Searchpanel(configEspaciosProductivos);
-//const mp = new Searchpanel(configMunicipos);
+const mp = new Searchpanel(configMunicipos);
 //const mp = new Searchpanel(configPlayas);
 
 map.addPlugin(mp);
