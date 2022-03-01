@@ -29,6 +29,7 @@ export default class Searchpanel extends M.Plugin {
     this.config_ = parameters.config;
     this.options_ = parameters.options;
     this.position_ = parameters.options.position || 'TL';
+    this.title_ = parameters.options.title
 
     if (this.position_ === 'TL' || this.position_ === 'BL') {
       this.positionClass_ = 'left';
@@ -60,7 +61,7 @@ export default class Searchpanel extends M.Plugin {
    * @api stable
    */
   addTo(map) {
-    this.controls_.push(new SearchpanelControl(this.config_));
+    this.controls_.push(new SearchpanelControl(this.config_, this.title_));
     this.map_ = map;
     // panel para agregar control - no obligatorio
     this.panel_ = new M.ui.Panel('panelSearchpanel', {
