@@ -68,9 +68,16 @@ div.m-searchpanel-title {
   height: 100vh !important;
 }
 
-#m-searchpanel-content {
-  height: calc(100vh - 90px);
+.m-searchpanel-content {
+  height: calc(100vh - 93px);
   overflow-y: auto;
+  border: 1px solid rgba(0, 0, 0, 0.13);
+}
+
+.m-searchpanel-content-tabs {
+  height: calc(100vh - 130px);
+  overflow-y: auto;
+  border: 1px solid rgba(0, 0, 0, 0.13);
 }
 
 .m-searchpanel-opciones-busqueda {
@@ -237,4 +244,34 @@ div.m-searchpanel-buttons > button:focus:enabled {
   border-style: dashed;
   border-width: 2px;
   text-align: center;
+}
+
+
+.m-searchpanel-tab {
+  display: inline-block;
+  margin: 0 0 -1px;
+  padding: 10px;
+  font-weight: 600;
+  text-align: center;
+  color: #bbb;
+  border: 1px solid transparent;
+}
+
+.m-searchpanel-tab:hover {
+  cursor: pointer;
+}
+
+.m-searchpanel-tab.actived {
+  color: #555;
+  border: 1px solid #ddd;
+  border-top: 2px solid #ff9800;
+  border-bottom: 1px solid #fff;
+}
+
+.show {
+  display: block;
+}
+
+.hidde {
+  display: none;
 }

@@ -4,9 +4,16 @@
     <div class="m-searchpanel-title">{{panelTitle}}</div>
     <!-- BODY-->
     <div class="m-searchpanel-body">
+        {{#each config}}
+        {{#if @first}}
+          <label id="label-content-panel-{{tab_id}}" class="m-searchpanel-tab actived">{{tab}}</label>
+        {{else}}
+          <label id="label-content-panel-{{tab_id}}" class="m-searchpanel-tab">{{tab}}</label>
+        {{/if}}
+      {{/each}}
       {{#each config}}
       {{#if @first}}
-      <div id="m-searchpanel-content-{{tab_id}}" class="m-searchpanel-content show">
+      <div id="m-searchpanel-content-{{tab_id}}" class="m-searchpanel-content-tabs show">
         {{#each fields}}
         <div id="field_{{field}}" class="m-searchpanel-opciones-busqueda">
           <label class="m-searchpanel-label-opciones-busqueda" for="textbox{{alias}}">{{alias}}</label>
