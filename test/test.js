@@ -66,10 +66,11 @@ const configFuentesyManantiales = {
 
 const configDirectorioEmpresas = {
   options: {
-    position: 'TL'
+    position: 'TL',
+    title: 'Buscador de Empresas'
   },
-  config: {
-    title: 'Buscador de Espacios Productivos',
+  config: [{
+    tab: 'Buscador de Empresas',
     geosearchUrl: 'https://www.juntadeandalucia.es/institutodeestadisticaycartografia/geobusquedas/eepp-f1_directorio/search?',
     maxResults: 100,
     fields: [
@@ -101,17 +102,18 @@ const configDirectorioEmpresas = {
         alias: 'Dirección'
       }
     ]
-  }
+  }]
 }
 
 
 
 const configEspaciosProductivos = {
   options: {
-    position: 'TL'
+    position: 'TL',
+    title: 'Buscador de Información'
   },
-  config: {
-    title: 'Buscador de Espacios Productivos',
+  config: [{
+    tab: 'Espacios Productivos',
     geosearchUrl: 'https://www.juntadeandalucia.es/institutodeestadisticaycartografia/geobusquedas/eepp-f1/search?',
     maxResults: 100,
     fields: [
@@ -149,16 +151,50 @@ const configEspaciosProductivos = {
         alias: 'Provincia'
       }
     ]
-  }
+  }, {
+    tab: 'Empresas',
+    geosearchUrl: 'https://www.juntadeandalucia.es/institutodeestadisticaycartografia/geobusquedas/eepp-f1_directorio/search?',
+    maxResults: 100,
+    fields: [
+      {
+        field: 'razon_soci',
+        alias: 'Nombre',
+        label: 'Escribe el nombre (Razón social)',
+      }
+    ],
+    infoFields: [
+      {
+        field: 'razon_soci',
+        alias: 'Nombre '
+      },
+      {
+        field: 'actividad',
+        alias: 'Actividad'
+      },
+      {
+        field: 'estrato',
+        alias: 'asalariados'
+      },
+      {
+        field: 'nombre',
+        alias: 'Espacio Productivo'
+      },
+      {
+        field: 'direccion',
+        alias: 'Dirección'
+      }
+    ]
+  }]
 }
 
 
 const configMunicipos = {
   options: {
-    position: 'TR'
+    position: 'TL',
+    title: 'Buscador de Municipios'
   },
-  config: {
-    title: 'Buscador de Municipios',
+  config: [{
+    tab: 'Buscador de Municipios',
     geosearchUrl: 'http://geobusquedas-sigc.juntadeandalucia.es/sigc/search?',
     maxResults: 200,
     fields: [
@@ -178,7 +214,7 @@ const configMunicipos = {
         alias: 'Provincia'
       }
     ]
-  }
+  }]
 }
 
 const configPlayas = {
@@ -228,9 +264,9 @@ const configPlayas = {
 }
 
 //const mp = new Searchpanel(configFuentesyManantiales);
-//const mp = new Searchpanel(configDirectorioEmpresas);
-//const mp = new Searchpanel(configEspaciosProductivos);
-const mp = new Searchpanel(configMunicipos);
+// const mp = new Searchpanel(configDirectorioEmpresas);
+const mp = new Searchpanel(configEspaciosProductivos);
+//const mp = new Searchpanel(configMunicipos);
 //const mp = new Searchpanel(configPlayas);
 
 map.addPlugin(mp);
