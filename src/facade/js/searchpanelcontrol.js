@@ -1,9 +1,11 @@
+/* eslint-disable no-console */
 /**
  * @module M/control/SearchpanelControl
  */
 
 import SearchpanelImplControl from 'impl/searchpanelcontrol';
-import template from 'templates/searchpanel';
+import searchpanelTemplate from 'templates/searchpanel';
+import searchpanelTabtemplate from 'templates/searchpanelTabs';
 
 export default class SearchpanelControl extends M.Control {
   /**
@@ -15,7 +17,7 @@ export default class SearchpanelControl extends M.Control {
    * @extends {M.Control}
    * @api stable
    */
-  constructor(config) {
+  constructor(config, panelTitle) {
     // 1. checks if the implementation can create PluginControl
     if (M.utils.isUndefined(SearchpanelImplControl)) {
       M.exception('La implementación usada no puede crear controles SearchpanelControl');
@@ -23,23 +25,25 @@ export default class SearchpanelControl extends M.Control {
     // 2. implementation of this control
     const impl = new SearchpanelImplControl();
     super(impl, 'Searchpanel');
-    this.config = config;
-    this.maxResults= this.config.maxResults
-    this.title = this.config.title;
-    this.fields = this.config.fields;
-    this.infofields = this.config.infoFields;
-    this.geosearchUrl = this.config.geosearchUrl + "q=";
-    this.otherParameters = '&rows='+this.maxResults+'&start=0&srs=EPSG%3A25830';
-    this.maxRecordsPage = 8;
-    this.totalRecords = null;
-    this.pageNumber = 1;
-    this.pageTotal = null;
-    this.dataList = new Array();
-    this.capaGeoJSON = null;
+    this.config_ = config;
+    this.maxResults_ = this.config_.maxResults
+    this.title_ = this.config_.title;
+    this.fields_ = this.config_.fields;
+    this.infofields_ = this.config_.infoFields;
+    this.panelTitle_ = panelTitle
+    this.geosearchUrl_ = this.config_.geosearchUrl + "fq=";
+    this.otherParameters_ = '&rows=' + this.maxResults_ + '&start=0&srs=EPSG%3A25830';
+    this.maxRecordsPage_ = 8;
+    this.totalRecords_ = null;
+    this.pageNumber_ = 1;
+    this.pageTotal_ = null;
+    this.tabs_ = null;
+    this.panelConfig_ = null;
+    this.dataList_ = new Array();
+    this.capaGeoJSON_ = null;
     this.wktFormatter = new ol.format.WKT();
     this.selectedFeatures = null;
     this.arrayFeaturesMapeaGeoJSON = null;
-
     this.stylePoint = new M.style.Point({
       radius: 5,
       fill: {
@@ -74,6 +78,21 @@ export default class SearchpanelControl extends M.Control {
 
   }
 
+  getPanelConfig(config) {
+    let arrayConfig = new Array()
+    for (let index = 0; index < config.length; index++) {
+      const element = config[index];
+      let myConfig = {
+        tab: element.tab,
+        tab_id: element.tab.toLowerCase().replace(' ', '-'),
+        fields: element.fields,
+        infoFields: element.infoFields
+      }
+      arrayConfig.push(myConfig)
+    }
+    return arrayConfig
+  }
+
   /**
    * This function creates the view
    *
@@ -83,12 +102,21 @@ export default class SearchpanelControl extends M.Control {
    * @api stable
    */
   createView(map) {
-    let templateVars = { vars: { title: this.title, fields: this.fields } };
+    
+    let myVars = {
+      panelTitle: this.panelTitle_,
+      config: this.getPanelConfig(this.config_)
+    }
+    let templateVars = { vars: myVars };
 
     return new Promise((success, fail) => {
-      const html = M.template.compileSync(template, templateVars);
+      let myTemplate = searchpanelTemplate
+      if(this.config_.length > 1){
+        myTemplate = searchpanelTabtemplate
+      }
+      const html = M.template.compileSync(myTemplate, templateVars);
       this.element = html;
-      this.addEvents(html, this.fields);
+      this.addEvents(html, this.fields_);
       success(html);
     });
   }
@@ -104,7 +132,7 @@ export default class SearchpanelControl extends M.Control {
     // calls super to manage de/activation
     super.activate();
     this.getImpl().activate(this.map_);
-    
+
   }
   /**
    * This function is called on the control deactivation
@@ -168,7 +196,7 @@ export default class SearchpanelControl extends M.Control {
       this.searchOptions[i].addEventListener('change', () => this.enableButtons(html));
     }
     this.results.addEventListener('click', (event) => {
-      this.map_.removeLayers(this.capaGeoJSON);
+      this.map_.removeLayers(this.capaGeoJSON_);
       this.selectedFeatures = new Array();
       let record = event.target.closest('table');
       let find = false;
@@ -183,7 +211,7 @@ export default class SearchpanelControl extends M.Control {
 
       let style = this.setStyle(this.selectedFeatures[0].geometry.type);
 
-      this.capaGeoJSON = new M.layer.GeoJSON({
+      this.capaGeoJSON_ = new M.layer.GeoJSON({
         extract: false,
         source: {
           crs: { properties: { name: "EPSG:25830" }, type: "name" },
@@ -192,10 +220,10 @@ export default class SearchpanelControl extends M.Control {
         },
         name: 'result',
       });
-      this.capaGeoJSON.setStyle(style);
-      this.map_.addLayers(this.capaGeoJSON);
-      this.capaGeoJSON.displayInLayerSwitcher = false;
-      this.capaGeoJSON.calculateMaxExtent().then((res)=>{
+      this.capaGeoJSON_.setStyle(style);
+      this.map_.addLayers(this.capaGeoJSON_);
+      this.capaGeoJSON_.displayInLayerSwitcher = false;
+      this.capaGeoJSON_.calculateMaxExtent().then((res) => {
         this.map_.setBbox(res);
       })
     });
@@ -235,18 +263,20 @@ export default class SearchpanelControl extends M.Control {
     let fieldList = new Array();
     this.arrayFeaturesMapeaGeoJSON = new Array();
     for (let i = 0; i < this.searchOptions.length; i++) {
-      fieldList.push(this.searchOptions[i].id + ':"' + this.searchOptions[i].value + '"');
+      if (this.searchOptions[i].value != "") {
+        fieldList.push(this.searchOptions[i].id + ':"' + this.searchOptions[i].value + '"');
+      }
     }
     for (let i = 0; i < fieldList.length; i++) {
       if (i == fieldList.length - 1) {
         query += fieldList[i];
       } else {
-        query += fieldList[i] + " and ";
+        query += fieldList[i] + " AND ";
       }
     }
     const projection = this.map_.getProjection().code;
     const wktFormatter = this.wktFormatter;
-    M.remote.get(this.geosearchUrl + encodeURI(query) + this.otherParameters).then((res) => {
+    M.remote.get(this.geosearchUrl_ + encodeURI(query) + this.otherParameters_).then((res) => {
       let resposeGeosearch = JSON.parse(res.text);
       resposeGeosearch.response.docs.forEach((element) => {
         const feature = wktFormatter.readFeature(element.geom, {
@@ -262,7 +292,7 @@ export default class SearchpanelControl extends M.Control {
   }
 
   clear() {
-    this.pageNumber = 1;
+    this.pageNumber_ = 1;
     for (let i = 0; i < this.searchOptions.length; i++) {
       this.searchOptions[i].value = '';
     }
@@ -279,7 +309,7 @@ export default class SearchpanelControl extends M.Control {
   }
 
   paginate(array) {
-    return array.slice((this.pageNumber - 1) * this.maxRecordsPage, this.pageNumber * this.maxRecordsPage);
+    return array.slice((this.pageNumber_ - 1) * this.maxRecordsPage_, this.pageNumber_ * this.maxRecordsPage_);
   }
 
   createResultContent(dataList) {
@@ -294,23 +324,23 @@ export default class SearchpanelControl extends M.Control {
     let recordTable = '<table id="' +
       record.properties["solrid"] +
       '" class="record-result">\n<tbody class="pointer-none">\n<tr class="rowResult" >\n';
-    for (let y = 0; y < this.infofields.length; y++) {
-      recordTable += '<td class="key">' + this.infofields[y].alias + '</td>\n<td class="value">' + record.properties[this.infofields[y].field] + '</td>\n</tr>'
+    for (let y = 0; y < this.infofields_.length; y++) {
+      recordTable += '<td class="key">' + this.infofields_[y].alias + '</td>\n<td class="value">' + record.properties[this.infofields_[y].field] + '</td>\n</tr>'
     }
     recordTable += '\n</tbody>\n</table>\n';
     return recordTable;
   }
 
   showResults(data) {
-    this.dataList = data;
-    if (this.dataList.length > 0) {
-      this.totalRecords = this.dataList.length
-      if (this.dataList.length % this.maxRecordsPage == 0) {
-        this.pageTotal = this.dataList.length / this.maxRecordsPage;
+    this.dataList_ = data;
+    if (this.dataList_.length > 0) {
+      this.totalRecords_ = this.dataList_.length
+      if (this.dataList_.length % this.maxRecordsPage_ == 0) {
+        this.pageTotal_ = this.dataList_.length / this.maxRecordsPage_;
       } else {
-        this.pageTotal = Math.floor(this.dataList.length / this.maxRecordsPage) + 1;
+        this.pageTotal_ = Math.floor(this.dataList_.length / this.maxRecordsPage_) + 1;
       }
-      let paginatedRecords = this.paginate(this.dataList);
+      let paginatedRecords = this.paginate(this.dataList_);
       let resultContent = this.createResultContent(paginatedRecords);
       this.createResultPagination();
       this.results.innerHTML = resultContent;
@@ -337,19 +367,19 @@ export default class SearchpanelControl extends M.Control {
   }
 
   createResultPagination() {
-    this.recordsTotal.textContent = this.totalRecords;
-    if (this.totalRecords < this.maxRecordsPage) {
-      this.recordsNumber.textContent = this.totalRecords;
+    this.recordsTotal.textContent = this.totalRecords_;
+    if (this.totalRecords_ < this.maxRecordsPage_) {
+      this.recordsNumber.textContent = this.totalRecords_;
       this.previusPage.style.visibility = "hidden";
       this.nextPage.style.visibility = "hidden";
     } else {
-      this.recordsNumber.textContent = "1 - " + this.maxRecordsPage;
+      this.recordsNumber.textContent = "1 - " + this.maxRecordsPage_;
     }
 
-    if (this.pageNumber == 1 & (this.totalRecords > this.maxRecordsPage)) {
+    if (this.pageNumber_ == 1 & (this.totalRecords_ > this.maxRecordsPage_)) {
       this.previusPage.style.visibility = "hidden";
       this.nextPage.style.visibility = "visible";
-    } else if (this.pageNumber == 1 & (this.totalRecords <= this.maxRecordsPage)) {
+    } else if (this.pageNumber_ == 1 & (this.totalRecords_ <= this.maxRecordsPage_)) {
       this.previusPage.style.visibility = "hidden";
       this.nextPage.style.visibility = "hidden";
     }
@@ -360,36 +390,36 @@ export default class SearchpanelControl extends M.Control {
   }
 
   showPreviusPage() {
-    this.pageNumber -= 1;
-    let paginatedRecords = this.paginate(this.dataList);
+    this.pageNumber_ -= 1;
+    let paginatedRecords = this.paginate(this.dataList_);
     let htmlRecords = this.createResultContent(paginatedRecords);
     this.results.innerHTML = htmlRecords;
-    if (this.pageNumber == 1) {
-      this.recordsNumber.textContent = "1 - " + this.pageNumber * this.maxRecordsPage;
+    if (this.pageNumber_ == 1) {
+      this.recordsNumber.textContent = "1 - " + this.pageNumber_ * this.maxRecordsPage_;
       this.previusPage.style.visibility = "hidden";
       this.nextPage.style.visibility = "visible"
     } else {
-      this.recordsNumber.textContent = this.pageNumber * this.maxRecordsPage - (this.maxRecordsPage - 1) + ' - ' + this.pageNumber * this.maxRecordsPage;
+      this.recordsNumber.textContent = this.pageNumber_ * this.maxRecordsPage_ - (this.maxRecordsPage_ - 1) + ' - ' + this.pageNumber_ * this.maxRecordsPage_;
       this.previusPage.style.visibility = "visible";
       this.nextPage.style.visibility = "visible";
     }
   }
 
   showNextPage() {
-    this.pageNumber += 1;
-    let paginatedRecords = this.paginate(this.dataList);
+    this.pageNumber_ += 1;
+    let paginatedRecords = this.paginate(this.dataList_);
     let htmlRecords = this.createResultContent(paginatedRecords);
     this.results.innerHTML = htmlRecords;
-    if (this.pageNumber == this.pageTotal) {
-      this.recordsNumber.textContent = (this.totalRecords - paginatedRecords.length) + ' - ' + this.totalRecords;
+    if (this.pageNumber_ == this.pageTotal_) {
+      this.recordsNumber.textContent = (this.totalRecords_ - paginatedRecords.length) + ' - ' + this.totalRecords_;
       this.previusPage.style.visibility = "visible";
       this.nextPage.style.visibility = "hidden";
     } else {
       this.recordsNumber.textContent =
-        this.pageNumber * this.maxRecordsPage -
-        (this.maxRecordsPage - 1) +
+        this.pageNumber_ * this.maxRecordsPage_ -
+        (this.maxRecordsPage_ - 1) +
         ' - ' +
-        this.pageNumber * this.maxRecordsPage;
+        this.pageNumber_ * this.maxRecordsPage_;
       this.previusPage.style.visibility = "visible";
       this.nextPage.style.visibility = "visible";
     }
